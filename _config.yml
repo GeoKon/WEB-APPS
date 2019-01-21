@@ -1,3 +1,4 @@
 theme: jekyll-theme-minimal
-gkeL1: https://github.com/GeoKon
-gkeWEB: https://github.com/GeoKon
+gkeL1: GKE-L1
+gkeWEB: WEBLIB
+baseurl: GKE-L1
