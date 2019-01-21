@@ -16,7 +16,7 @@ Also, look into
 
 4. [https://github.com/GeoKon/GKE-L1/blob/master/README.md](https://github.com/GeoKon/GKE-L1/blob/master/README.md) absolute path
 
-5. [./GKE-L1/blob/master/README.md](./GKE-L1/blob/master/README.md) relative path1
+5. [GeoKon.github.io/GKE-L1/README.md](GeoKon.github.io/GKE-L1/README.md) relative path1
 
-6. [../GKE-L1/blob/master/README.md](./GKE-L1/blob/master/README.md) relative path2
+
 
