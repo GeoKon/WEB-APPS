@@ -8,10 +8,15 @@ Also, look into
 
 ###Playing with links
 
-1. [./src/SimpleSRV.md](./src/SimpleSRV.md)
-2. [./src/SimpleSRV](./src/SimpleSRV) No .md extension
-3. [./apps/ExampleWEB/ExampleWEB.md](./apps/ExampleWEB/ExampleWEB.md)
-4. [../GKESP-L1/README.md](../GKESP-L1/README.md)
+1. [./src/SimpleSRV.md](./src/SimpleSRV.md) Works. Actually redirects to https://github.com/GeoKon/WEBLIBS/blob/master/src/SimpleSRV.md
 
+2. [./apps/ExampleWEB/ExampleWEB.md](./apps/ExampleWEB/ExampleWEB.md) Works. Actually redirects to https://github.com/GeoKon/WEBLIBS/blob/master/apps/ExampleWEB/ExampleWEB.md
 
-  
+3. [../GKESP-L1/README.md](../GKESP-L1/README.md) does not work because it redirects to https://github.com/GeoKon/WEBLIBS/blob/GKESP-L1/README.md
+
+4. [https://github.com/GeoKon/GKE-L1/blob/master/README.md](https://github.com/GeoKon/GKE-L1/blob/master/README.md) absolute path
+
+5. [./GKE-L1/blob/master/README.md](./GKE-L1/blob/master/README.md) relative path1
+
+6. [../GKE-L1/blob/master/README.md](./GKE-L1/blob/master/README.md) relative path2
+

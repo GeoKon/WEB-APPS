@@ -44,7 +44,7 @@ SimpleSRV Endpoints
 |`/eep`				 | Displays HTML the WiFi EEPROM parameters
 |`/ed?delete={fname}` | Deletes specified file
 |`/ed?new={fname}`    | Creates a new file
-|`upload`            | Uploads a file (overides previous one)
+|`/upload`            | Uploads a file (overides previous one)
 |`/favicon`			 | Your favorite icon
 
 ** Endpoints requiring .htm files **
