@@ -8,11 +8,10 @@ Also, look into
 
 ###Playing with links
 
-[./src/SimpleSRV.md](./src/SimpleSRV.md)
-[./src/SimpleSRV](./src/SimpleSRV) No .md extension
-[./apps/ExampleWEB/ExampleWEB.md](./apps/ExampleWEB/ExampleWEB.md)
-[../GKESP-L1/README.md](../GKESP-L1/README.md)
-
+1. [./src/SimpleSRV.md](./src/SimpleSRV.md)
+2. [./src/SimpleSRV](./src/SimpleSRV) No .md extension
+3. [./apps/ExampleWEB/ExampleWEB.md](./apps/ExampleWEB/ExampleWEB.md)
+4. [../GKESP-L1/README.md](../GKESP-L1/README.md)
 
 
   
