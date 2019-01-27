@@ -1,19 +1,5 @@
 #include "ExampleWEB.h"
 
-//// -------- Minimum includes for this module --------------------------------------
-//
-//    #include <ESP8266WebServer.h>
-//    #include <FS.h>
-//
-//    #include <cpuClass.h>
-//    #include <eepClass.h>
-//    
-// ------ Expected definitions/allocations in main() ------------------------------
-//
-//    extern ESP8266WebServer server;
-//    extern CPU cpu;					// NodeMCU class
-//    extern EEP eep;					// basic eeprom parameters 
-
 // ----------------------- Exported functions -------------------------------------
 
 void setupAP()

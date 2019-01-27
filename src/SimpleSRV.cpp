@@ -252,7 +252,7 @@ void showArgs( )
     }
   }
 }
-void showJson( String json )
+void showJson( String &json )
 {
   cpu.heapUpdate();
   if( g_trace & T_JSON )
@@ -260,6 +260,13 @@ void showJson( String json )
     PN( "--- " ); PR( json );
   }
 }
+void showJson( char *s )
+{
+  cpu.heapUpdate();
+  if( g_trace & T_JSON )
+    PF( "--- %s\r\n", s );
+}
+
 //format bytes
 String formatBytes(size_t bytes)
 {

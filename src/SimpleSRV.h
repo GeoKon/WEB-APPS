@@ -16,7 +16,8 @@
     #define T_ACTIONS 16
 
     void showArgs( );
-    void showJson( String json );
+    void showJson( String &json );
+	void showJson( char *s );
     
     String fileList( bool br = false );
     String formatBytes(size_t bytes);
