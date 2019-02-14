@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<title>
+	WEB CLI
+</title>
+
+	<style>
+		body {text-align: center;}
+		input {font-size: 80%;}
+		button {text-align:center; font-size: 100%; width=20 }
+		textarea {text-align:left; font-size: 120%;}
+
+	</style>
+	
+<body onload="fetchData(); setInterval( fetchData, 2000);">
+
+	<h2>	Temp[0]=<button id="idtemp"></button> 
+			Temp[1]=<button id="idtemp2"></button>
+	</h2>
+
+	<textarea id="idtext" rows="10" cols="25" wrap="hard">
+	</textarea>
+	
+	<p align="center">
+		<label>LOGGING</label><br/>
+		<button onclick="startLOG( 4  );">4sec</button>
+		<button onclick="startLOG( 30 );">30sec</button>
+		<button onclick="startLOG( 60 );">1min</button>
+		<button onclick="startLOG( 5*60 );">5min</button>
+		<button onclick="startLOG( 10*60 );">10min</button>
+		<button onclick="startLOG( 20*60 );">20min</button>
+		<button onclick="startLOG( 30*60 );">30min</button>
+		<button onclick="startLOG( 60*60 );">1hr</button>
+		<button onclick="stopLOG();">STOP</button>
+		<br/>
+		<label id="idresp"> </label>
+		<br/>
+	</p>
+	<h2><a href="index.htm">Goto INDEX</a></h2>
+
+	<script>
+		var simul = true;
+		var obj = "{'temp':40, 'temp2':80 }";
+		var degF = "\u2109"; 
+		var degC = "\u2103"; 
+		
+		function fetchData()
+		{
+			simul = !(document.location.host);
+			if( simul )
+				handler();
+			else
+			{
+				var request = new XMLHttpRequest();
+				request.onload = handler;
+				request.open('GET', '/tstat');
+				request.send();
+			}
+		}
+		function handler()
+		{
+			if( (this.status == 200) && (simul== false ) ) 
+			{
+				obj = JSON.parse( this.responseText );
+				//console.log( this.responseText );
+				//console.log( obj );
+				//console.log( obj.temp );
+				
+				doit( obj.temp, obj.temp2 );
+			}
+			if( simul ) // random data changes
+				doit( Math.random()*70.0, Math.random()*70.0 );
+		}
+		function doit( T, T2 )
+		{
+			document.getElementById("idtemp").innerHTML  = T.toFixed(1).toString()+degF;
+			document.getElementById("idtemp2").innerHTML = T2.toFixed(1).toString()+degF;
+			var s2 = T.toFixed(1).toString()+ "\t" + T2.toFixed(1).toString();
+			displayLOG( s2 );
+		}
+	
+		var counter = 0;		// counts seconds
+		var started = 0;		// modulo of counter for LOGGING
+		
+		function startLOG( interval )
+		{
+			started = interval;
+			counter = 0;	
+		
+			document.getElementById("idtext").innerHTML="";
+			if( interval < 60 )
+				document.getElementById("idtext").innerHTML+=" Sec\t "+degF+"\t "+degF+"\r\n";
+			else
+				document.getElementById("idtext").innerHTML+=" Min\t "+degF+"\t "+degF+"\r\n";
+		}
+		function stopLOG()
+		{
+			started = 0;
+		}
+		function displayLOG( text )
+		{
+			if( !started )
+				return;
+		
+			if( (counter % started )==0 )
+			{
+				var txt = document.getElementById('idtext');
+			
+				if( started < 60 )
+					txt.innerHTML += " " + counter + "\t" + text + "\r\n";
+				else
+					txt.innerHTML += " " + counter/60 + "\t" + text + "\r\n";
+				
+				txt.scrollTop = txt.scrollHeight;
+			}
+			counter+=2;		// two second increment
+		}
+		
+	</script>
+
+</body>
+</html>

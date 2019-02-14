@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<title>
+	WEB CLI
+</title>
+
+	<style>
+		body {text-align: center;}
+		input {font-size: 80%;}
+		button {text-align:center; font-size: 100%; width=20 }
+		textarea {text-align:left; font-size: 120%;}
+
+	</style>
+	
+<body onload="fetchData(); setInterval( fetchData, 2000);">
+
+	<h2>
+		<label>Temperature is </label>
+		<button id="idtemp"></button>
+	</h2>
+
+	<textarea id="idtext" rows="10" cols="15" wrap="hard">
+	</textarea>
+	
+	<h2>
+		<label>Temp threshold is </label>
+		<button id="idthres"></button>
+		<label>, Control relay is </label>
+		<button id="idrelay"></button>
+	</h2>
+	
+	<p align="center">
+		<label>Log Temperature every...</label><br/>
+		<button onclick="startLOG( 4  );">4sec</button>
+		<button onclick="startLOG( 30 );">30sec</button>
+		<button onclick="startLOG( 60 );">1min</button>
+		<button onclick="startLOG( 5*60 );">5min</button>
+		<button onclick="startLOG( 10*60 );">10min</button>
+		<button onclick="startLOG( 20*60 );">20min</button>
+		<button onclick="startLOG( 30*60 );">30min</button>
+		<button onclick="startLOG( 60*60 );">1hr</button>
+		<button onclick="stopLOG();">STOP</button>
+		<br/>
+	</p>
+	<p align="center">
+		<label>Simulate Temperature to...</label><br/>
+		<button onclick="execCLI( 'simulF+45' );">45&#176F</button>
+		<button onclick="execCLI( 'simulF+68' );">68&#176F</button>
+		<button onclick="execCLI( 'simulF+69' );">69&#176F</button>
+		<button onclick="execCLI( 'simulF+70' );">70&#176F</button>
+		<button onclick="execCLI( 'simulF+71' );">71&#176F</button>
+		<button onclick="execCLI( 'simulF+72' );">72&#176F</button>
+		<button onclick="execCLI( 'simulF' );">OFF</button>
+	</p>
+	<p align="center">
+		<label>Turn Heater ON at...</label><br/>
+		<button onclick="execCLI( 'heatC+7.22' );">45&#176F</button>
+		<button onclick="execCLI( 'heatC+20' );">68&#176F</button>
+		<button onclick="execCLI( 'heatC+20.56' );">69&#176F</button>
+		<button onclick="execCLI( 'heatC+21.11' );">70&#176F</button>
+		<button onclick="execCLI( 'heatC+21.67' );">71&#176F</button>
+		<button onclick="execCLI( 'heatC+22.22' );">72&#176F</button>
+		<button onclick="execCLI( 'heatC' );">NEVER</button>
+		<br/>
+		<label id="idresp"> </label>
+		<br/>
+	</p>
+
+
+
+	<h2><a href="index.htm">Goto INDEX</a></h2>
+
+	<script>
+		var simul = true;
+		var obj = "{'temp':40,'temp2':30,'mode':0,'relay':1,'thres':10}";
+		var degF = " \u2109"; 
+		var degC = " \u2103"; 
+		
+		function fetchData()
+		{
+			simul = !(document.location.host);
+			if( simul )
+				handler();
+			else
+			{
+				var request = new XMLHttpRequest();
+				request.onload = handler;
+				request.open('GET', '/tstat');
+				request.send();
+			}
+		}
+		function handler()
+		{
+			if( (this.status == 200) && (simul== false ) ) 
+			{
+				obj = JSON.parse( this.responseText );
+				//console.log( this.responseText );
+				//console.log( obj );
+				//console.log( obj.temp );
+				
+				doit( obj.temp );	// in degrees F
+			}
+			if( simul ) // random data changes
+				doit( Math.random()*70.0 );
+			
+			document.getElementById("idrelay").innerHTML = obj.relay ? "ON" : "OFF";	
+			document.getElementById("idthres").innerHTML = obj.mode ? obj.thres.toFixed(1).toString()+degF : "OFF";	
+				
+		}
+		function doit( T )
+		{
+			document.getElementById("idtemp").innerHTML = T.toFixed(1).toString()+degF;
+			displayLOG( T.toFixed(1).toString() );
+		}
+	
+		var counter = 0;		// counts seconds
+		var started = 0;		// modulo of counter for LOGGING
+		
+		function startLOG( interval )
+		{
+			started = interval;
+			counter = 0;	
+		
+			document.getElementById("idtext").innerHTML="";
+			if( interval < 60 )
+				document.getElementById("idtext").innerHTML+=" Sec\t"+degF+"\r\n";
+			else
+				document.getElementById("idtext").innerHTML+=" Min\t"+degF+"\r\n";
+		}
+		function stopLOG()
+		{
+			started = 0;
+		}
+		function displayLOG( text )
+		{
+			if( !started )
+				return;
+		
+			if( (counter % started )==0 )
+			{
+				var txt = document.getElementById('idtext');
+			
+				if( started < 60 )
+					txt.innerHTML += " " + counter + "\t" + text + "\r\n";
+				else
+					txt.innerHTML += " " + counter/60 + "\t" + text + "\r\n";
+				
+				txt.scrollTop = txt.scrollHeight;
+			}
+			counter+=2;		// two second increment
+		}
+	    function execCLI( cmd )
+		{
+			document.getElementById("idresp").innerHTML = "  ";
+			var request = new XMLHttpRequest();
+			request.onload = handlerCLI;
+			request.open('GET', "/webcli.htm?cmd="+cmd );
+			request.send();
+		}
+		function handlerCLI()
+		{
+			if( (this.status == 200)  ) 
+				document.getElementById("idresp").innerHTML = "OK";
+		}
+		function toC( F )
+		{
+			return (F-32)*5/9;
+		}
+		function toF( C )
+		{
+			return (C*9/5)+32;
+		}
+	</script>
+
+</body>
+</html>
