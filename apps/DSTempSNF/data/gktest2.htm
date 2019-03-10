@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Graph Test</title>
+    <style>body {
+        padding: 0;
+        margin: 0;
+		text-align: center;
+		margin: auto;
+        background: #fff
+    }
+	</style>
+	
+</head>
+
+<body onload = "firstTime(); id=setInterval( fetchData, 500);">
+	
+	<div class="chart-container" style="position:relative; width:80vw; margin:auto;"> 
+	<!-- <div class="chart-container" style="position:relative; height:60vh; width:100vw; margin: auto;">  -->
+		<!-- <canvas id="canvasID" style="border:1px solid black;" ></canvas> -->
+		<canvas id="canvasID" ></canvas>
+	</div>
+	<p>
+	<button onclick="timing(100);">0.1</button>
+	<button onclick="timing(1000);">1</button>
+	<button onclick="timing(5000);">5</button>
+	</p>
+	<!--
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+	-->
+	<script src="chartmn.js"></script>
+	<script src="timeline2.js"></script>
+ 
+	<script>
+
+		var myCanvas = document.getElementById("canvasID");
+		//myCanvas.width = 1000;
+		//myCanvas.height = 500;
+		//var ctx = myCanvas.getContext("2d");
+				
+		var myChart = new Chart( myCanvas, defaults );
+		
+		function firstTime()
+		{
+			initXAxis( {npoints:50,	first:0, incr:2} );
+			fetchData();
+		}
+		function fetchData()
+		{
+			var x = Math.random(1.0)*50.0;
+			fillData( x );
+			myChart.update();
+		}
+		var id=0;
+		function timing( T )
+		{
+			clearInterval( id );
+			id = setInterval( fetchData, T );
+		}
+				
+</script>
+</body>
+</html>

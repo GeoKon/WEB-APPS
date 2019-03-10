@@ -17,6 +17,8 @@
 	<h2>
 		<label>Temperature is </label>
 		<button id="idtemp"></button>
+		<label>.  Humidity is </label>
+		<button id="idhumt"></button>
 	</h2>
 
 	<textarea id="idtext" rows="10" cols="15" wrap="hard">
@@ -72,7 +74,7 @@
 
 	<script>
 		var simul = true;
-		var obj = "{'temp':40,'temp2':30,'mode':0,'relay':1,'thres':10}";
+		var obj = "{'temp':40,'humidity':30,'mode':0,'relay':1,'thres':10}";
 		var degF = " \u2109"; 
 		var degC = " \u2103"; 
 		
@@ -98,18 +100,20 @@
 				//console.log( obj );
 				//console.log( obj.temp );
 				
-				doit( obj.temp );	// in degrees F
+				doit( obj.temp, obj.humidity );	// in degrees F
 			}
 			if( simul ) // random data changes
-				doit( Math.random()*70.0 );
+				doit( Math.random()*70.0, 30.0 );
 			
 			document.getElementById("idrelay").innerHTML = obj.relay ? "ON" : "OFF";	
 			document.getElementById("idthres").innerHTML = obj.mode ? obj.thres.toFixed(1).toString()+degF : "OFF";	
 				
 		}
-		function doit( T )
+		function doit( T, H )
 		{
 			document.getElementById("idtemp").innerHTML = T.toFixed(1).toString()+degF;
+			document.getElementById("idhumt").innerHTML = H.toFixed(0).toString()+"%";
+			
 			displayLOG( T.toFixed(1).toString() );
 		}
 	

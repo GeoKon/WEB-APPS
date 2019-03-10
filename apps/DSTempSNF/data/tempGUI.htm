@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<title>
+	Single Temp Display
+</title>
+
+	<style>
+		body {text-align: center;}
+		input {font-size: 80%;}
+		button {text-align:center; font-size: 100%;}
+		textarea {text-align:left; font-size: 120%;}
+
+	</style>
+	
+	<body onload="flipToLinear(); fetchData(); setInterval( fetchData, 2000);">
+	
+	<!-- Current and Target are displayed as read by the sensor. Neither simulation, nor
+	     target control sliders change the values of these boxes. 
+		 
+		 Simulation sends the "simulF N" command when button is pressed.
+		 
+		 Target control sends the "targetF N" command when button is pressed AND 
+		 changes the target gauge to indicate so.
+	-->
+	
+	<table align="center">		
+		<tr>
+			<td>Current Temp</td>
+			<td>Target Temp</td>
+			<td>
+			</td>
+		<tr>
+			<td><button id="idtemp" style="font-size: 150%; width:100px;" ></button></td>
+			<td><button id="idtarg" style="font-size: 150%; width:100px;" ></button></td>
+			<td>
+			</td>
+		</tr>
+		<tr>
+			<td><canvas id="show-temp" ></canvas></td>
+			<td><canvas id="show-targ" ></canvas></td>
+			<td id="logid">
+			<!--	<textarea id="idtext" rows="10" cols="15" wrap="hard"></textarea> -->
+			</td>
+		</tr>
+	</table>
+	
+	<p>
+		<button id="idrelay"></button>
+	</p>
+	<table align="center">
+		
+		<tr>
+			<td>(1) To</td>
+			<td>(2) slide to set...</td>
+			<td>(3) then Press</td>
+		</tr>
+		<tr>
+			<td>log temperature every...</td>
+			<td><input type="range" min="0" max="90" value="0" id="inpLOG" oninput="changeLOG();"></td>
+			<td><button id="btnLOG" style="width:100px;" onclick="startLOG();" >OFF</button></td>
+		</tr>
+		<tr>
+			<td>simulate Temperature to...</td>
+			<td><input type="range" min="-11" max="110" value="-11"  id="inpSIM" oninput="changeSIM();"></td>
+			<td><button id="btnSIM" style="width:100px;" onclick="startSIM();" >OFF</button></td>
+		</tr>
+		<tr>
+			<td>turn Heater ON at...</td>
+			<td><input type="range" min="-10" max="110" value="70"  id="inpHEAT" oninput="changeHEAT();"></td>
+			<td><button id="btnHEAT" style="width:100px;" onclick="startHEAT();" >OFF</button></td>
+		</tr>
+		<tr>
+			<td>...</td>
+			<td>...</td>
+			<td id="idresp"></td>
+		</tr>
+	</table>
+	<button onclick="flipToLinear();" >Display Thermometer</button>
+	<button onclick="flipToGauges();" >Display Gauge</button>
+	
+	<h2><a href="index.htm">Goto INDEX</a></h2>
+
+	<script src="gaugemin.js"></script>
+	<script src="/gaugemin.js"></script>
+	
+	<script>
+
+		// See https://canvas-gauges.com/documentation/user-guide/configuration
+		
+		// ---------------------- CODE TO MANAGE THE GAUGES OR THERMOMETERS ----------------------------
+		var gaugeParms =
+		{
+			renderTo: 'show-temp',
+		
+			/* Canvas attributes */
+			width: 200, 
+			height: 200,
+			minValue: -10,
+			maxValue: 110,
+			title: "Degrees"+degF,
+			
+			/* Tics and Titles */
+			exactTicks: true,
+			majorTicks: [-10, 0,10,20,30,40,50,60,70,80,90,100,110],
+			minorTicks: 2,
+
+			colorBorderOuter: 'LightBlue',
+			colorTitle: 'black',
+			colorNeedle: 'red',
+			valueInt: 1,
+			valueDec: 1
+		};
+		var thermParms =
+		{
+			renderTo: 'show-temp',
+		
+			/* Canvas attributes */
+			width:150,
+			height: 300,
+			minValue: -10,
+			maxValue: 110,
+			title: "Degrees"+degF,
+
+			/* Tics and Titles */
+			exactTicks: true,
+			majorTicks: [-10, 0,10,20,30,40,50,60,70,80,90,100,110],
+			minorTicks: 2,
+			
+			colorTitle: 'black',
+			colorValueBoxBackground:false,
+			valueBoxStroke: 0,
+			
+			//colorBorderOuter: 'red',
+			borders: 1,
+			valueInt: 1,
+			valueDec: 1,
+			
+			valueBox: false,
+			
+			highlights: false,
+
+			// mercury 
+			barWidth: 8,
+			needle: false,
+			//colorNeedle: 'red',
+			colorBarProgressEnd: 'red'
+		};
+
+		var gauge;
+		var target;
+			
+		function flipToLinear()			// flip display to Linear Thermometer
+		{
+			thermParms.title = "Degrees"+degF;
+			thermParms.renderTo = 'show-temp';
+			gauge = new LinearGauge( thermParms );
+			gauge.draw();
+			gauge.value = 0;
+			
+			thermParms.renderTo = 'show-targ';
+			target = new LinearGauge( thermParms );
+			target.draw();
+			initHEAT();
+		}
+		function flipToGauges()			// flip display to Gauge 
+		{
+			gaugeParms.title = "Degrees"+degF;
+			gaugeParms.renderTo = 'show-temp';
+			gauge = new RadialGauge( gaugeParms );
+			gauge.draw();
+			gauge.value = 0;
+
+			gaugeParms.renderTo = 'show-targ';
+			target = new RadialGauge( gaugeParms );
+			target.draw();
+			initHEAT();			
+		}
+		
+		// -------------------------- CODE MANAGING ASYNC REQUESTS ----------------------------------
+		var simul = true;
+		var obj = {temp:40,temp2:30,tmode:1,relay:1,tstate:0, t_heat:15};
+		var degF = " \u2109"; 
+		var degC = " \u2103"; 
+		
+		function fetchData()
+		{
+			simul = !(document.location.host);
+			if( simul )
+				handler();
+			else
+			{
+				var request = new XMLHttpRequest();
+				request.onload = handler;
+				request.open('GET', '/tstat');
+				request.send();
+			}
+		}
+		function handler()
+		{
+			if( (this.status == 200) && (simul== false ) ) 
+			{
+				obj = JSON.parse( this.responseText );
+				//console.log( this.responseText );
+				//console.log( obj );
+				//console.log( obj.temp );
+				
+				doit( obj.temp, obj.t_heat );				// in degrees F
+			}
+			if( simul ) // random data changes
+				doit( Math.random()*70.0, Math.random()*70.0 );
+			
+			if( obj.relay==1 )
+			{
+				document.getElementById("idrelay").innerHTML = "Heater ON";
+				document.getElementById("idrelay").style.visibility = 'visible';
+			}
+			else
+			{
+				document.getElementById("idrelay").innerHTML = "Heater OFF";
+				document.getElementById("idrelay").style.visibility = 'hidden';
+			}
+			
+			document.getElementById("idresp").innerHTML = "...";
+		}
+		function doit( Actual, Target )
+		{
+			document.getElementById("idtemp").innerHTML = Actual.toFixed(1).toString()+degF;
+			displayLOG( Actual.toFixed(1).toString() );
+			gauge.value = Actual;
+						
+			document.getElementById("idtarg").innerHTML  = Target.toFixed(1).toString()+degF;
+		}
+		
+		// ------------------------------------ SLIDERS CODE -------------------------------------------
+		
+		var sliderLOG  = document.getElementById("inpLOG");
+		var sliderSIM  = document.getElementById("inpSIM");
+		var sliderHEAT = document.getElementById("inpHEAT");
+		
+		var valLOG  = document.getElementById( "btnLOG" );
+		var valSIM  = document.getElementById( "btnSIM" );
+		var valHEAT = document.getElementById( "btnHEAT" );
+		
+		// functions below are called as sliders move
+		function changeLOG()
+		{
+			/*
+				slider is in 10sec increments Seconds, 0, 1, 15*10
+				if less than 6 (i.e.60sec) show seconds
+				else show minutes
+			*/
+			if( sliderLOG.value == 0 )
+				valLOG.innerHTML = "OFF";
+			else if( sliderLOG.value < 6 )
+				valLOG.innerHTML = sliderLOG.value*10 + " sec";
+			else 
+				valLOG.innerHTML = Math.floor(sliderLOG.value/6) + " min";			
+		}
+		function changeSIM()
+		{
+			if( sliderSIM.value == -11 )
+				valSIM.innerHTML = "OFF";
+			else
+				valSIM.innerHTML = sliderSIM.value + degF;			
+		}
+		function changeHEAT()
+		{
+			valHEAT.innerHTML = sliderHEAT.value + degF;
+		}
+		
+		// -------------------------------- DISPLAY LOGGER -------------------------------------------
+		
+		var counter = 0;		// counts seconds, but increments by 2sec at a time
+		var started = 0;		// modulo of counter. For example, if 4, logs every 4-seconds
+		
+		var logger = document.createElement('textarea');
+		
+		function startLOG()
+		{
+			if( inpLOG.value == 0 )			// stop logging
+			{
+				if( started )				// was it active? Stop it
+				{
+					started = 0;
+					document.getElementById( "logid" ).removeChild( logger );
+				}
+			}
+			else
+			{
+				// create textarea dynamically
+				logger.id ='idtext';
+				logger.cols = 15;
+				logger.rows = 13;
+				logger.wrap ='hard';
+				document.getElementById( "logid" ).appendChild( logger );
+				
+				started = inpLOG.value * 10;
+				counter = 0;	
+				
+				//document.getElementById("idtext").innerHTML="";
+				if( started < 60 )
+					document.getElementById("idtext").innerHTML+=" Sec\t"+degF+"\r\n";
+				else
+					document.getElementById("idtext").innerHTML+=" Min\t"+degF+"\r\n";
+			}
+		}
+		function displayLOG( text )
+		{
+			if( !started )
+				return;
+		
+			if( (counter % started )==0 )
+			{
+				var txt = document.getElementById('idtext');
+			
+				if( started < 60 )
+					txt.innerHTML += " " + counter + "\t" + text + "\r\n";
+				else
+					txt.innerHTML += " " + Math.floor(counter/60) + "\t" + text + "\r\n";
+				
+				txt.scrollTop = txt.scrollHeight;
+			}
+			counter+=2;		// two second increment
+		}
+		// ------------------------------------ SIMULATION CODE -------------------------------------------
+		function startSIM()
+		{
+			//console.log( sliderSIM.value );
+			
+			if( sliderSIM.value == -11 )		// simulation is OFF
+				var cmd = "simulF";
+			else
+				var cmd = "simulF+"+sliderSIM.value;
+			execCLI( cmd );
+		}
+		// ------------------------------------ TARGET HEAT CODE -------------------------------------------
+		function initHEAT()
+		{
+			target.value = 70;
+			sliderHEAT.value = target.value;
+			valHEAT.innerHTML = target.value + degF;
+		}
+		function startHEAT()
+		{
+			target.value = sliderHEAT.value;
+			//console.log( target.value );
+			var cmd = "targetF+"+target.value;
+			execCLI( cmd );
+		}
+		// ------------------------------------ COMMAND EXECUTION CODE -------------------------------------------
+
+		function execCLI( cmd )
+		{
+			console.log( cmd );
+			document.getElementById("idresp").innerHTML = "  ";
+			var request = new XMLHttpRequest();
+			request.onload = handlerCLI;
+			request.open('GET', "/webcli.htm?cmd="+cmd );
+			request.send();
+		}
+		function handlerCLI()
+		{
+			if( (this.status == 200)  ) 
+				document.getElementById("idresp").innerHTML = "OK";
+		}
+		function toC( F )
+		{
+			return (F-32)*5/9;
+		}
+		function toF( C )
+		{
+			return (C*9/5)+32;
+		}
+	</script>
+
+</body>
+</html>
