@@ -11,7 +11,7 @@
 // ---------------- Local variable/class allocation ---------------------
 
     Buf cliresp(1000);                      // allocate buffer for CLI response
-    ModuloTic mydelay( WIFI_TIMEOUT_SEC);   // waiting tic for WiFi Connection
+    //ModuloTic mydelay( WIFI_TIMEOUT_SEC);   // waiting tic for WiFi Connection
 
 // ------------- main Callbacks (add your changes here) -----------------
 
@@ -20,9 +20,15 @@ void staCallbacks()
     server.on("/tstat",
     [](){
         showArgs();
-        Buf json(100);
-        json.add("{'temp':%.1f, 'temp2':%.1f, 'mode':%d, 'relay':%d, 'thres':%.1f}", 
-            myi.tempF[0], myi.tempF[1], myi.tmode, myi.relayON, myi.threshold*9.0/5.0+32.0);
+        Buf json(120);
+#ifdef DS18B20        
+        json.add("{'temp':%.1f, 'temp2':%.1f, 'tmode':%d, 'relay':%d, 't_state':%d, 't_heat':%.1f}", 
+            myi.tempF, myi.tempF, myi.gp.tmode, myi.relayON, myi.relayON, myi.gp.threshold*9.0/5.0+32.0);
+#endif
+#ifdef DHT22
+        json.add("{'temp':%.1f, 'humidity':%.0f, 'mode':%d, 'relay':%d, 'thres':%.1f}", 
+            myi.tempF, myi.humidity, myi.tmode, myi.relayON, myi.threshold*9.0/5.0+32.0);
+#endif
         json.quotes();
         showJson( json.c_str() );
         server.send(200, "application/json", json.c_str() );
@@ -43,7 +49,6 @@ void staCallbacks()
 //        server.send( 200, "text/html", r );
 //        PF("Responded to /currentsetting %s\r\n", r );
 //    });
-    
     
     server.on("/webcli.htm", HTTP_GET,              // when command is submitted, webcli.htm is called  
     [](){
@@ -100,7 +105,7 @@ void interactForever()
     }
 }
 
-// Call repeately. Blinks LED every 'ms'
+// Call repeately. Does not block. Blinks ms-ON, ms-OFF. Optional delay at the end.
 void blinkLED( int ms, uint32_t dly )
 {
     static uint32_t T0=0;
@@ -119,7 +124,6 @@ void blinkLED( int ms, uint32_t dly )
 }
 void setupSTA()
 {
-
     PN("Starting STA mode...\r\nMAC=");
     PR( WiFi.macAddress() );                   // mac is used later to define mDNS
     
@@ -145,7 +149,7 @@ void setupSTA()
     name.set("GKE-%02x-%02x", mac[0], mac[5] );     // MSB and LSB of mac address
     if (!MDNS.begin( !name )) 
         cpu.die("Error setting up MDNS responder!", 3 );
-    PF("mDNS advertising %s.local:%d", !name, eep.wifi.port ); 
+    PF("mDNS advertising: %s.local, Port:%d\r\n", !name, eep.wifi.port ); 
         
     setTrace( T_REQUEST | T_JSON );  
     srvCallbacks();

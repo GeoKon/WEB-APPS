@@ -6,6 +6,12 @@
 #ifndef DSTEMPSNF_H
 #define DSTEMPSNF_H
 
+#define DS18B20     // either DS18B22 or DHT22
+//#define DHT22
+
+//#define NODEMCU     // either NODEMCU or SONOFF
+#define SONOFF
+
 // --------------------- Includes needed for this application -----------------
 
     #include <ESP8266WebServer.h>
@@ -20,6 +26,7 @@
     #include <timeClass.h>
     #include <eepTable.h>
     #include <ds18Class.h>
+    #include <filtClass.h>
     #include "SimpleSRV.h"                // baseline for any web-server application
     
 // ------ Expected definitions/allocations in main() ------------------------------
@@ -41,18 +48,25 @@
       public:
         wifi_state wifiOK; 
         bool trace;
-        float tempC[ NUM_TEMPS ];
-        float tempF[ NUM_TEMPS ];
-
+        float tempC;
+        float tempF;
+        float humidity;
+        
         bool relayON;
         bool simulON;
         
-        thermode_t tmode;       // move these to EEPROM !
-        float threshold;        // always in deg C
-        float delta;            // in deg C
-        
-        Globals();
+        struct                      // do not change the order of this
+        {
+            int tmode;              // (thermode_t) move these to EEPROM !
+            int prdelay;            // propagation delay. Use 0 for no delay
+            float threshold;        // always in deg C
+            float delta;            // in deg C
+        } gp;
+        Globals();        
+        void initUserParms();
     };
+    #define GP_FORMAT "tmode:%d filter:%d target:%f°C delta:%f°C\r\n"
+    
     extern Globals myi;
     
 // Exported functions by ExampleSTA.cpp
